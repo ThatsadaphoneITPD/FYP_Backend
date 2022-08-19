@@ -147,7 +147,8 @@ router.post(
   (req, res) => {
     let data;
     let eventType;
-    let endpointSecret = process.env.STRIPE_WEB_HOOK;
+    let endpointSecret;
+    // = process.env.STRIPE_WEB_HOOK;
 
     if (endpointSecret) {
       // Retrieve the event by verifying the signature using the raw body and secret.
@@ -170,28 +171,36 @@ router.post(
     }
 
     // Handle the event
-    if (eventType === "checkout.session.completed") {
-      stripe.customers
-        .retrieve(data.customer)
-        .then(async (customer) => {
-          // console.log("customer", customer);
-          // console.log("data:", data);
-          try {
-            // CREATE ORDER
-            createOrder(customer, data);
-          } catch (err) {
-            res.sendStatus(500).send(`⚠️Create Oeder fail:  ${err.message}`);
-            console.log(typeof createOrder);
-            console.log(err);
-          }
-        })
-        .catch((err) => {
-          res
-            .sendStatus(500)
-            .send(`⚠️ Pay Checkout Strip Fail:  ${err.message}`);
-          console.log(err.message);
-        });
+    switch (eventType) {
+      case "checkout.session.completed":
+        stripe.customers
+          .retrieve(data.customer)
+          .then(async (customer) => {
+            // console.log("customer", customer);
+            // console.log("data:", data);
+            try {
+              // CREATE ORDER
+              createOrder(customer, data);
+            } catch (err) {
+              res.sendStatus(500).send(`⚠️Create Oeder fail:  ${err.message}`);
+              console.log(typeof createOrder);
+              console.log(err);
+            }
+          })
+          .catch((err) => {
+            res
+              .sendStatus(500)
+              .send(`⚠️ Pay Checkout Strip Fail:  ${err.message}`);
+            console.log(err.message);
+          });
+        break;
+      // ... handle other event types
+      default:
+        console.log(`Unhandled event type ${eventType}`);
     }
+
+    // if (eventType === "checkout.session.completed") {
+    // }
 
     // Return a 200 res to acknowledge receipt of the event
     res.status(200).send("Payment Completed").end();
