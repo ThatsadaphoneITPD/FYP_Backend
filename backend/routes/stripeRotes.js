@@ -147,8 +147,7 @@ router.post(
   (req, res) => {
     let data;
     let eventType;
-    let endpointSecret;
-    // = process.env.STRIPE_WEB_HOOK;
+    let endpointSecret = process.env.STRIPE_WEB_HOOK;
 
     if (endpointSecret) {
       // Retrieve the event by verifying the signature using the raw body and secret.
