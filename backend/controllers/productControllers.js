@@ -9,6 +9,55 @@ const getProducts = asyncHandler(async (req, res) => {
     .populate({ path: "attachments", select: "filePath online_url" });
   res.json(products);
 });
+//search Product by title
+const getProductSearch = asyncHandler(async (req, res) => {
+  const result = await Product.find({
+    $or: [{ title: { $regex: req.params.key } }],
+  })
+    .populate({ path: "category", select: "name" })
+    .populate({ path: "attachments", select: "filePath online_url" });
+  console.log(result);
+  res.send(result);
+});
+
+//search Product ALL
+const getProSearchALL = asyncHandler(async (req, res, next) => {
+  const filters = req.query;
+  // console.log(req.query);
+  const products = await Product.find()
+    .populate({ path: "category", select: "name" })
+    .populate({ path: "attachments", select: "filePath online_url" });
+  const filteredItems = products.filter((item) => {
+    let isValid = true;
+    for (key in filters) {
+      console.log(key, item[key], filters[key]);
+      isValid = isValid && item[key] == filters[key];
+    }
+    return isValid;
+  });
+  res.send(filteredItems);
+});
+//search Product by category
+const getProSearchCategory = asyncHandler(async (req, res) => {
+  try {
+    let filter = {};
+    if (req.query.categories) {
+      filter = { category: req.query.categories.split(",") };
+    }
+    const products = await Product.find(filter)
+      .populate({ path: "category", select: "name" })
+      .populate({ path: "attachments", select: "filePath online_url" });
+    if (!products || products == []) {
+      res.status(500).json({ error: "Not found!", success: false });
+    }
+    // console.log(products);
+    res.status(200).send(products);
+  } catch (err) {
+    return res.status(401).json({
+      error: err.message,
+    });
+  }
+});
 
 const getProductById = asyncHandler(async (req, res) => {
   const product = await Product.findById(req.params.id).populate({
@@ -363,6 +412,9 @@ async function removeAllAttachmentOnMongoAndFileOnCloud(attachmentId, res) {
 
 module.exports = {
   getProducts,
+  getProductSearch,
+  getProSearchALL,
+  getProSearchCategory,
   getProductById,
   getAttachmentsById,
   CreateProduct,

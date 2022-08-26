@@ -50,6 +50,7 @@ app.use("/api/notes", noteRoutes);
 //API Product Create/Edit/delete
 
 app.use("/api/products", protect, multer.array("files"), productRoutes);
+app.use("/api/productSearch", productRoutes);
 //API categories
 app.use("/api/categories", categoryRotes);
 
