@@ -140,69 +140,59 @@ const createOrder = async (customer, data) => {
 
 // Stripe webhoook
 // This is your Stripe CLI webhook secret for testing your endpoint locally.
-
 router.post(
   "/webhook",
-  express.raw({ type: "application/json" }),
-  (req, res) => {
+  express.json({ type: "application/json" }),
+  async (req, res) => {
     let data;
     let eventType;
-    let endpointSecret = process.env.STRIPE_WEB_HOOK;
 
-    if (endpointSecret) {
+    // Check if webhook signing is configured.
+    let webhookSecret;
+    //webhookSecret = process.env.STRIPE_WEB_HOOK;
+
+    if (webhookSecret) {
       // Retrieve the event by verifying the signature using the raw body and secret.
       let event;
-      const sig = req.headers["stripe-signature"];
+      let signature = req.headers["stripe-signature"];
+
       try {
-        event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
-      } catch (err) {
-        console.log(
-          `⚠️  Webhook signature verification failed:  ${err.message}`
+        event = stripe.webhooks.constructEvent(
+          req.body,
+          signature,
+          webhookSecret
         );
-        res.sendStatus(400).send(`⚠️ Err failed:  ${err.message}`);
-        return;
+      } catch (err) {
+        console.log(`⚠️  Webhook signature verification failed:  ${err}`);
+        return res.sendStatus(400);
       }
-      data = req.body.data.object;
-      eventType = req.body.type;
+      // Extract the object from the event.
+      data = event.data.object;
+      eventType = event.type;
     } else {
+      // Webhook signing is recommended, but if the secret is not configured in `config.js`,
+      // retrieve the event data directly from the request body.
       data = req.body.data.object;
       eventType = req.body.type;
     }
 
-    // Handle the event
-    switch (eventType) {
-      case "checkout.session.completed":
-        stripe.customers
-          .retrieve(data.customer)
-          .then(async (customer) => {
-            // console.log("customer", customer);
-            // console.log("data:", data);
-            try {
-              // CREATE ORDER
-              createOrder(customer, data);
-            } catch (err) {
-              res.sendStatus(500).send(`⚠️Create Oeder fail:  ${err.message}`);
-              console.log(typeof createOrder);
-              console.log(err);
-            }
-          })
-          .catch((err) => {
-            res
-              .sendStatus(500)
-              .send(`⚠️ Pay Checkout Strip Fail:  ${err.message}`);
-            console.log(err.message);
-          });
-        break;
-      // ... handle other event types
-      default:
-        console.log(`Unhandled event type ${eventType}`);
+    // Handle the checkout.session.completed event
+    if (eventType === "checkout.session.completed") {
+      stripe.customers
+        .retrieve(data.customer)
+        .then(async (customer) => {
+          try {
+            // CREATE ORDER
+            createOrder(customer, data);
+          } catch (err) {
+            console.log(typeof createOrder);
+            console.log(err);
+          }
+        })
+        .catch((err) => console.log(err.message));
     }
 
-    // if (eventType === "checkout.session.completed") {
-    // }
-
-    // Return a 200 res to acknowledge receipt of the event
-    res.status(200).send("Payment Completed").end();
+    res.status(200).end();
   }
 );
 

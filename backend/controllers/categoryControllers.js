@@ -15,8 +15,6 @@ const getCategoryById = asyncHandler(async (req, res) => {
   } else {
     res.status(404).json({ message: "Category not found" });
   }
-
-  res.json(category);
 });
 
 const createCategory = asyncHandler(async (req, res) => {

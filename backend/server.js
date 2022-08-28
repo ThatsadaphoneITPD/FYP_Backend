@@ -10,6 +10,7 @@ const {
   noteRoutes,
   categoryRotes,
   stripeRotes,
+  orderRotes,
 } = require("./routes");
 const { notFound, errorHandler } = require("./middlewares/errorMiddleware");
 const { multer, isAuthentication } = require("./utils");
@@ -53,6 +54,8 @@ app.use("/api/products", protect, multer.array("files"), productRoutes);
 app.use("/api/productSearch", productRoutes);
 //API categories
 app.use("/api/categories", categoryRotes);
+//API categories
+app.use("/api/orders", orderRotes);
 
 //APT Stripe Payment
 app.use("/api/stripe", stripeRotes);

@@ -7,13 +7,13 @@ module.exports = class Token {
 
   createToken() {
     return jwt.sign(this.payload, process.env.JSON_SECRETE_TOKEN, {
-      expiresIn: "6h",
+      expiresIn: "20h",
     });
   }
 
   createRefreshToken() {
     return jwt.sign(this.payload, process.env.JSON_REFRESH_TOKEN, {
-      expiresIn: "8h",
+      expiresIn: "24h",
     });
   }
   static verifyToken(token) {
