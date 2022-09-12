@@ -130,7 +130,7 @@ const createOrder = async (customer, data) => {
     user: customer.metadata.userId,
     customerId: data.customer,
     paymentIntentId: data.payment_intent,
-    products,
+    products: products.map((i) => i._id),
     subtotal: data.amount_subtotal,
     total: data.amount_total,
     shipping: data.customer_details,
