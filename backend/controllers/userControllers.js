@@ -2,7 +2,7 @@ const asyncHandler = require("express-async-handler");
 const jwt = require("jsonwebtoken");
 const express = require("express");
 const bcryptjs = require("bcryptjs");
-const { Account, Role, UserProfile, Notification } = require("../models");
+const { Account, Role, UserProfile, Store } = require("../models");
 const { Token, isAuthentication } = require("../utils");
 const { roles } = require("../fixtures");
 let tokenList = [];
@@ -171,6 +171,24 @@ const registerUser = asyncHandler(async function (req, res) {
           firstName: doc.username,
           email: doc.email,
         });
+        //Create New Store for new Account
+        const duplicateStore = await Store.findOne({
+          merchant: doc._id,
+        }).exec();
+        if (duplicateStore) throw new Error("Store has Already been exist");
+        const store = await Store.create({
+          storename: doc.username,
+          merchant: doc._id,
+        });
+        //save Store_id in Account's store obj
+        const user = await Account.findById(doc._id);
+        if (user) {
+          user.shop = store._id;
+          await user.save();
+        } else {
+          throw new Error("Shop can't Save Store");
+        }
+        //
         return res
           .status(200)
           .cookie("accessToken", accessToken, {
@@ -187,6 +205,7 @@ const registerUser = asyncHandler(async function (req, res) {
               role: assignedRole,
             },
             role: role,
+            store,
             profile,
           });
       }
@@ -214,6 +233,8 @@ const login = asyncHandler(async function (req, res) {
 
     const role = await Role.findOne({ _id: user.role._id }).exec();
     if (!user) throw new Error("Maybe you forgot username or password");
+    //get Store that match betteen user and merchant Id
+    const store = await Store.findOne({ merchant: user.id }).exec();
 
     // 3. Validate the log user password is capable
     const isCapable = await bcryptjs.compare(password, user.password);
@@ -230,6 +251,7 @@ const login = asyncHandler(async function (req, res) {
       message: "Login successfully",
       email: user.email,
       role: role.roleName,
+      store: store._id,
       accessToken,
       refreshToken,
       accountId: user.id,

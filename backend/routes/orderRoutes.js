@@ -8,6 +8,11 @@ const { protect } = require("../middlewares/authMiddleware");
 router.route("/").get(orderCTRL.getOrders);
 //Get Shoper order
 router.route("/shoper/items").get(protect, orderCTRL.getShoperOrders);
+//Get Shoper order by ID and action cancel
+router
+  .route("/shoper/order/:id")
+  .get(orderCTRL.getOrderById)
+  .put(protect, orderCTRL.editCancelOrder);
 
 // Order Action for Admin CRUD
 router

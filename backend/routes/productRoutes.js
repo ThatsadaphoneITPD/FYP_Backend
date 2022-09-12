@@ -33,6 +33,6 @@ router.route("/items/all").get(paginatedResults(Product), (req, res) => {
 });
 router.route("/search/:key").get(productCtrl.getProductSearch);
 router.route("/category/item").get(productCtrl.getProSearchCategory);
-router.route("/searchAll").get(productCtrl.getProSearchALL);
+router.route("/searchAll/all").get(productCtrl.getProSearchALL);
 
 module.exports = router;

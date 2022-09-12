@@ -36,7 +36,10 @@ const accountSchema = new Schema(
       ref: "Role",
       require: true,
     },
-    // newNotification: { type: Boolean, default: false },
+    shop: {
+      type: Schema.Types.ObjectId,
+      ref: "Store",
+    },
     refreshToken: String,
   },
   {

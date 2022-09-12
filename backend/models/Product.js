@@ -24,6 +24,10 @@ const productSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "Account",
     },
+    store: {
+      type: Schema.Types.ObjectId,
+      ref: "Store",
+    },
     attachments: [
       {
         type: Schema.Types.ObjectId,

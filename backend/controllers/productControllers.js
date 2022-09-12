@@ -1,6 +1,6 @@
 const asyncHandler = require("express-async-handler");
 const { default: mongoose } = require("mongoose");
-const { Product, Attachment, Account, Category } = require("../models");
+const { Product, Attachment, Account, Category, Store } = require("../models");
 const { cloudinary } = require("../utils");
 
 const getProducts = asyncHandler(async (req, res) => {
@@ -22,20 +22,72 @@ const getProductSearch = asyncHandler(async (req, res) => {
 
 //search Product ALL
 const getProSearchALL = asyncHandler(async (req, res, next) => {
-  const filters = req.query;
-  // console.log(req.query);
-  const products = await Product.find()
-    .populate({ path: "category", select: "name" })
-    .populate({ path: "attachments", select: "filePath online_url" });
-  const filteredItems = products.filter((item) => {
-    let isValid = true;
-    for (key in filters) {
-      console.log(key, item[key], filters[key]);
-      isValid = isValid && item[key] == filters[key];
+  try {
+    //normal method
+    // let query
+    // if (req.query.keyword) {
+    //   query.$or = [
+    //     { title: { $regex: new RegExp(req.query.keyword, "i") } },
+    //     { content: { $regex: new RegExp(req.query.keyword, "i") } },
+    //   ];
+    // }
+
+    //Aggregate menthod
+    let query = [
+      // {
+      //   $lookup: {
+      //     from: "accounts",
+      //     localField: "user",
+      //     foreignField: "_id",
+      //     as: "creator",
+      //   },
+      // },
+      // { $unwind: "$creator" },
+      {
+        $lookup: {
+          from: "categories",
+          localField: "category",
+          foreignField: "_id",
+          as: "category_detail",
+        },
+      },
+      // { $unwind: "$category_detail" },
+      {
+        $lookup: {
+          from: "attachments",
+          localField: "attachments",
+          foreignField: "_id",
+          as: "attachment_list",
+        },
+      },
+    ];
+    if (req.query.keyword && req.query.keyword != "") {
+      query.push({
+        $match: {
+          $or: [
+            { title: { $regex: new RegExp(req.query.keyword, "i") } },
+            { content: { $regex: new RegExp(req.query.keyword, "i") } },
+            {
+              "category_detail.name": {
+                $regex: new RegExp(req.query.keyword, "i"),
+              },
+            },
+          ],
+        },
+      });
     }
-    return isValid;
-  });
-  res.send(filteredItems);
+
+    const products = await Product.aggregate(query);
+
+    res.status(200).send({
+      message: "successfully fetch",
+      searchdata: products,
+    });
+  } catch (err) {
+    return res.status(401).json({
+      error: err.message,
+    });
+  }
 });
 //search Product by category
 const getProSearchCategory = asyncHandler(async (req, res) => {
@@ -76,8 +128,8 @@ const getProductById = asyncHandler(async (req, res) => {
 
 const CreateProduct = asyncHandler(async (req, res) => {
   const { title, content, price, categories } = req.body;
-  const { accountId } = req.user;
   const files = req.files;
+  const { shop } = req.user;
 
   if (!title || !content || !categories || !price) {
     res.status(400);
@@ -99,9 +151,11 @@ const CreateProduct = asyncHandler(async (req, res) => {
         attachmentList.forEach((attachment) => {
           attachment.product = product._id;
         });
+        //5. Save new post in Store DB
+        SaveItemToStore(product, shop);
         return res.status(200).json({
           response: [product],
-          message: "product successfully",
+          message: "Create product successfully",
         });
       })
       .catch((e) => {
@@ -294,15 +348,13 @@ function createAttachmentFromCloudinary(files, productId) {
 }
 function createNewProduct(req, files) {
   const { title, content, price, categories } = req.body;
-  const { accountId } = req.user;
-
-  // const categoryAll = await Category.findById(categories).populate({ path: "category", select: "name" });
-
+  const { accountId, shop } = req.user;
   return Product.create({
     title,
     content,
     user: accountId,
     price: price,
+    store: shop,
     category: categories,
     attachments: files.map((file) => file._id),
     createdAt: Date.now(),
@@ -321,6 +373,23 @@ function createNewProduct(req, files) {
         select: "username email",
       })
   );
+}
+async function SaveItemToStore(item, sh) {
+  //find store base on req.user auth
+  const store = await Store.findById(sh);
+  //if Found same store
+  if (store) {
+    // store will push or add in array;
+    //update new Product in Store;
+    await store.update({
+      $push: {
+        product: { _id: item._id },
+      },
+    });
+    console.log(`${item._id}'s Save Item in Store`);
+  } else {
+    console.log("can't save item in Store");
+  }
 }
 
 async function updateAttachmentFromProduct(req, product) {

@@ -2,14 +2,20 @@ const { Schema } = require("mongoose");
 
 const storeSchema = new Schema(
   {
-    user: {
+    storename: { type: String },
+    merchant: {
       type: Schema.Types.ObjectId,
       ref: "Account",
     },
-    orders: [
+    product: [
       {
         type: Schema.Types.ObjectId,
-        ref: "Order",
+        ref: "Account",
+      },
+    ],
+    orders: [
+      {
+        productId: { type: Schema.Types.ObjectId, ref: "Order" },
       },
     ],
   },

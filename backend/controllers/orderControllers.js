@@ -64,6 +64,32 @@ const updateOrder = asyncHandler(async (req, res) => {
     res.status(500).send(err);
   }
 });
+const editCancelOrder = asyncHandler(async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (order.user.toString() !== req.user.accountId.toString()) {
+      res.status(401);
+      throw new Error("You can't perform this action");
+    }
+
+    if (order) {
+      //change order's statue false to ture
+      order.cancel = true;
+
+      const updatedorder = await order.save();
+      res.json({
+        message: "Successfull Update Order!",
+        updateCancle: updatedorder,
+      });
+    } else {
+      res.status(404).send({ message: "Not Found Order to Update" });
+      throw new Error("order not found");
+    }
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
 //delete
 const delecteOrder = asyncHandler(async (req, res) => {
   const order = await Order.findById(req.params.id);
@@ -88,4 +114,5 @@ module.exports = {
   delecteOrder,
   getShoperOrders,
   updateOrder,
+  editCancelOrder,
 };

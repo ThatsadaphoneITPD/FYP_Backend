@@ -1,6 +1,6 @@
 const express = require("express");
 const Stripe = require("stripe");
-const { Order } = require("../models");
+const { Order, Store } = require("../models");
 const router = express.Router();
 const stripe = Stripe(process.env.STRIPE_KEY);
 
@@ -29,6 +29,7 @@ router.post("/create-checkout-session", async (req, res) => {
       id: item.id,
       qty: item.quantity,
       p: item.price,
+      s: item.shop,
     };
   });
   const customer = await stripe.customers.create({
@@ -110,15 +111,41 @@ router.post("/create-checkout-session", async (req, res) => {
 // Create order function
 const createOrder = async (customer, data) => {
   const Items = JSON.parse(customer.metadata.cart);
-
+  //1. create item Order
   const products = Items.map((item) => {
     return {
       productId: item.id,
       price: item.p * item.qty,
+      shop: item.s,
       quantity: item.qty,
+      shipping: data.customer_details,
     };
   });
-
+  //2.Puch item in Store.orders array
+  async function SaveOrderToStore(item, sh) {
+    //find store base on item.shop id
+    const store = await Store.findById(sh);
+    //if Found same store
+    if (store) {
+      // store will push or add in array;
+      //update new Product in Store;
+      await store.update({
+        $push: {
+          orders: { productId: item.productId },
+        },
+      });
+      console.log(`${item.productId}'s Save Order in Store`);
+    } else {
+      console.log("can't save Order in Store");
+    }
+  }
+  //save Each product order from different Store
+  if (products) {
+    products.map((i) => {
+      return SaveOrderToStore(i, i.shop);
+    });
+  }
+  //3. save all items in Order
   const newOrder = new Order({
     user: customer.metadata.userId,
     customerId: data.customer,
@@ -132,6 +159,7 @@ const createOrder = async (customer, data) => {
 
   try {
     const savedOrder = await newOrder.save();
+
     console.log("Processed Order:", savedOrder);
   } catch (err) {
     console.log(err);

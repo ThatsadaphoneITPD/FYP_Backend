@@ -1,4 +1,4 @@
-const { Account, Role } = require("../models");
+const { Account, Role, Store } = require("../models");
 const { Token } = require("../utils");
 const asyncHandler = require("express-async-handler");
 
@@ -26,6 +26,7 @@ const protect = asyncHandler(async (req, res, next) => {
         role: role.roleName,
         accountId: account._id,
         profileImage: account.profileImage,
+        shop: account.shop,
         // roleId: role._id,
         // workspace: account.workspace,
       };
