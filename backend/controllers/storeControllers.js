@@ -33,17 +33,6 @@ const getStores = asyncHandler(async (req, res) => {
           as: "order",
         },
       },
-      //   {
-      //     $set: {
-      //       "orderItems.product": "$product",
-      //     },
-      //   },
-      //   {
-      //     $group: {
-      //       _id: "$_id",
-      //       orderItems: { $push: "$orderItems" },
-      //     },
-      //   },
     ];
     const orders = await Store.aggregate(query);
     res.status(200).send(orders);

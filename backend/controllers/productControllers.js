@@ -385,7 +385,7 @@ async function SaveItemToStore(item, sh) {
   if (store) {
     // store will push or add in array;
     //update new Product in Store;
-    await store.update({
+    await store.updateOne({
       $push: {
         product: { _id: item._id },
       },

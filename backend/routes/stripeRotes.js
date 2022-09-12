@@ -121,10 +121,10 @@ const createOrder = async (customer, data) => {
       shipping: data.customer_details,
     });
     newStoreOrder.save();
-    console.log("New", newStoreOrder);
+    // console.log("New", newStoreOrder);
     return newStoreOrder;
   });
-
+  console.log("Prods", products);
   //3. save all items in Order
   const newOrder = new Order({
     user: customer.metadata.userId,
@@ -144,7 +144,7 @@ const createOrder = async (customer, data) => {
     if (store) {
       // store will push or add in array;
       //update new Product in Store;
-      await store.update({
+      await store.updateOne({
         $push: {
           orders: { _id: item._id },
         },
@@ -154,9 +154,9 @@ const createOrder = async (customer, data) => {
       console.log("can't save Order in Store");
     }
   }
-  //save Each product order from different Store
-  if (newOrder) {
-    newOrder.products.map((i) => {
+  //save Each product order base on different Store
+  if (products) {
+    products.map((i) => {
       return SaveOrderToStore(i, i.shop);
     });
   }
