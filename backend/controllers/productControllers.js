@@ -369,6 +369,10 @@ function createNewProduct(req, files) {
         select: "fileName online_url",
       })
       .populate({
+        path: "store",
+        select: "storename",
+      })
+      .populate({
         path: "user",
         select: "username email",
       })

@@ -9,4 +9,5 @@ module.exports = {
   Note: model("Note", require("./noteModel")),
   Order: model("Order", require("./Order")),
   Store: model("Store", require("./Store")),
+  StoreOrder: model("StoreOrder", require("./StoreOrder")),
 };

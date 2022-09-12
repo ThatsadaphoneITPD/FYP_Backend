@@ -10,13 +10,8 @@ const orderSchema = new Schema(
     paymentIntentId: { type: String },
     products: [
       {
-        productId: { type: Schema.Types.ObjectId, ref: "Product" },
-        price: { type: String },
-        shop: { type: Schema.Types.ObjectId, ref: "Store" },
-        delivery_status: { type: String, default: "pending" },
-        received_status: { type: Boolean, default: false },
-        quantity: { type: Number },
-        shipping: { type: Object, required: true },
+        type: Schema.Types.ObjectId,
+        ref: "StoreOrder",
       },
     ],
     cancel: { type: Boolean, default: false },

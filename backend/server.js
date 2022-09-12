@@ -11,6 +11,7 @@ const {
   categoryRotes,
   stripeRotes,
   orderRotes,
+  storeRotes,
 } = require("./routes");
 const { notFound, errorHandler } = require("./middlewares/errorMiddleware");
 const { multer, isAuthentication } = require("./utils");
@@ -54,9 +55,10 @@ app.use("/api/products", protect, multer.array("files"), productRoutes);
 app.use("/api/productSearch", productRoutes);
 //API categories
 app.use("/api/categories", categoryRotes);
-//API categories
+//API order
 app.use("/api/orders", orderRotes);
-
+//API Store
+app.use("/api/stores", storeRotes);
 //APT Stripe Payment
 app.use("/api/stripe", stripeRotes);
 // ------------------- Error Handler -------------------------

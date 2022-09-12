@@ -5,4 +5,5 @@ module.exports = {
   categoryRotes: require("./categoryRoutes"),
   stripeRotes: require("./stripeRotes"),
   orderRotes: require("./orderRoutes"),
+  storeRotes: require("./storeRotes"),
 };

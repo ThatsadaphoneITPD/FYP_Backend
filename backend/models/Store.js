@@ -10,12 +10,13 @@ const storeSchema = new Schema(
     product: [
       {
         type: Schema.Types.ObjectId,
-        ref: "Account",
+        ref: "Product",
       },
     ],
     orders: [
       {
-        productId: { type: Schema.Types.ObjectId, ref: "Order" },
+        type: Schema.Types.ObjectId,
+        ref: "StoreOrder",
       },
     ],
   },

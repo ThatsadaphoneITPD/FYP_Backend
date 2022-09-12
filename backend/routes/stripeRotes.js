@@ -1,6 +1,6 @@
 const express = require("express");
 const Stripe = require("stripe");
-const { Order, Store } = require("../models");
+const { Order, Store, StoreOrder } = require("../models");
 const router = express.Router();
 const stripe = Stripe(process.env.STRIPE_KEY);
 
@@ -113,38 +113,18 @@ const createOrder = async (customer, data) => {
   const Items = JSON.parse(customer.metadata.cart);
   //1. create item Order
   const products = Items.map((item) => {
-    return {
+    const newStoreOrder = new StoreOrder({
       productId: item.id,
       price: item.p * item.qty,
       shop: item.s,
       quantity: item.qty,
       shipping: data.customer_details,
-    };
-  });
-  //2.Puch item in Store.orders array
-  async function SaveOrderToStore(item, sh) {
-    //find store base on item.shop id
-    const store = await Store.findById(sh);
-    //if Found same store
-    if (store) {
-      // store will push or add in array;
-      //update new Product in Store;
-      await store.update({
-        $push: {
-          orders: { productId: item.productId },
-        },
-      });
-      console.log(`${item.productId}'s Save Order in Store`);
-    } else {
-      console.log("can't save Order in Store");
-    }
-  }
-  //save Each product order from different Store
-  if (products) {
-    products.map((i) => {
-      return SaveOrderToStore(i, i.shop);
     });
-  }
+    newStoreOrder.save();
+    console.log("New", newStoreOrder);
+    return newStoreOrder;
+  });
+
   //3. save all items in Order
   const newOrder = new Order({
     user: customer.metadata.userId,
@@ -156,7 +136,30 @@ const createOrder = async (customer, data) => {
     shipping: data.customer_details,
     payment_status: data.payment_status,
   });
-
+  //2.Puch item in Store.orders array
+  async function SaveOrderToStore(item, sh) {
+    //find store base on item.shop id
+    const store = await Store.findById(sh);
+    //if Found same store
+    if (store) {
+      // store will push or add in array;
+      //update new Product in Store;
+      await store.update({
+        $push: {
+          orders: { _id: item._id },
+        },
+      });
+      console.log(`${item._id}'s Save Order in Store`);
+    } else {
+      console.log("can't save Order in Store");
+    }
+  }
+  //save Each product order from different Store
+  if (newOrder) {
+    newOrder.products.map((i) => {
+      return SaveOrderToStore(i, i.shop);
+    });
+  }
   try {
     const savedOrder = await newOrder.save();
 
