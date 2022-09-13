@@ -34,15 +34,6 @@ const getProSearchALL = asyncHandler(async (req, res, next) => {
 
     //Aggregate menthod
     let query = [
-      // {
-      //   $lookup: {
-      //     from: "accounts",
-      //     localField: "user",
-      //     foreignField: "_id",
-      //     as: "creator",
-      //   },
-      // },
-      // { $unwind: "$creator" },
       {
         $lookup: {
           from: "categories",

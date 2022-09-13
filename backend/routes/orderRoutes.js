@@ -13,6 +13,10 @@ router
   .route("/shoper/order/:id")
   .get(orderCTRL.getOrderById)
   .put(protect, orderCTRL.editCancelOrder);
+//Get Shoper mark orderList Done from "pending" to "done "
+router
+  .route("/shoper/reciveAllCatalog")
+  .put(protect, orderCTRL.shoperCatalogDeliveryById);
 
 // Order Action for Admin CRUD
 router

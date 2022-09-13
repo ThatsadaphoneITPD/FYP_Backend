@@ -64,6 +64,7 @@ const updateOrder = asyncHandler(async (req, res) => {
     res.status(500).send(err);
   }
 });
+//Edit Shoper Cancel order
 const editCancelOrder = asyncHandler(async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
@@ -79,15 +80,38 @@ const editCancelOrder = asyncHandler(async (req, res) => {
 
       const updatedorder = await order.save();
       res.json({
-        message: "Successfull Update Order!",
+        message: "Successfull Update Caceled Order!",
         updateCancle: updatedorder,
       });
     } else {
       res.status(404).send({ message: "Not Found Order to Update" });
-      throw new Error("order not found");
     }
   } catch (err) {
     res.status(500).send(err.message);
+  }
+});
+//Shoper Mark catalog Order's Delivery as Done when have reviced all OrderItem.
+const shoperCatalogDeliveryById = asyncHandler(async (req, res) => {
+  try {
+    const catalogOrder = await Order.findById(req.query.orderid);
+    const delivery = "DONE";
+    console.log(catalogOrder);
+    if (catalogOrder.length !== 0) {
+      catalogOrder.delivery_status = `${delivery}`;
+      const updatedorder = await catalogOrder.save();
+      console.log(updatedorder);
+      res.status(200).json({
+        data: updatedorder,
+        success: true,
+        message: `CatalogOrder's all reviceed ${delivery} !!`,
+      });
+    } else {
+      res
+        .status(404)
+        .json({ success: false, message: "CatalogOrder not found" });
+    }
+  } catch (err) {
+    res.status(500).send({ success: false, err: err.message });
   }
 });
 //delete
@@ -115,4 +139,5 @@ module.exports = {
   getShoperOrders,
   updateOrder,
   editCancelOrder,
+  shoperCatalogDeliveryById,
 };
