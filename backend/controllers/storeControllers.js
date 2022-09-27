@@ -85,7 +85,7 @@ const fastSearchStores = asyncHandler(async (req, res) => {
       });
     }
     const store = await Store.aggregate(query);
-    console.log(store);
+    // console.log(store);
     res.status(200).send({ stores: store, message: "Success all Store" });
   } catch (err) {
     res.status(500).send(err);
@@ -126,14 +126,9 @@ const getMerchantStore = asyncHandler(async (req, res) => {
       query
     );
     if (myStore.length !== 0) {
-      res.status(200).send({
-        data: myStore,
-        success: true,
-        message: "Arrive to Your Store Sucsessfuly",
-      });
+      res.status(200).send(myStore);
     } else {
       res.status(200).send({
-        success: false,
         message: "Fail loading Store",
       });
     }
@@ -255,6 +250,71 @@ const getStoreSearchALL = asyncHandler(async (req, res, next) => {
     });
   }
 });
+const getSaleStore = asyncHandler(async (req, res) => {
+  try {
+    let query = [
+      {
+        $match: {
+          $or: [{ merchant: req.user.accountId }],
+        },
+      },
+      {
+        $lookup: {
+          from: "storeorders",
+          localField: "orders",
+          foreignField: "_id",
+          as: "order",
+        },
+      },
+      { $unwind: "$order" },
+      {
+        $lookup: {
+          from: "products",
+          localField: "order.productId",
+          foreignField: "_id",
+          as: "product",
+        },
+      },
+      { $unwind: "$product" },
+      {
+        $lookup: {
+          from: "categories",
+          localField: "product.category",
+          foreignField: "_id",
+          as: "product.category",
+        },
+      },
+      { $unwind: "$product.category" },
+      {
+        $group: {
+          _id: "$_id",
+          salelist: {
+            $push: {
+              _id: "$order._id",
+              name: "$product.title",
+              price: "$order.price",
+              value: { $avg: "$order.quantity" },
+            },
+          },
+          totalSaleAmount: { $sum: { $multiply: ["$order.price"] } },
+
+          countAllSale: { $count: {} },
+          categoriedSale: {
+            $push: {
+              _id: "$order._id",
+              category: "$product.category.name",
+              value: { $sum: 1 },
+            },
+          },
+        },
+      },
+    ];
+    const store = await Store.aggregate(query);
+    res.status(200).send({ sale: store, message: "Getting Store sale" });
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+});
 
 module.exports = {
   getStores,
@@ -264,4 +324,5 @@ module.exports = {
   shoperReciveOrderItemById,
   getStoreSearchALL,
   fastSearchStores,
+  getSaleStore,
 };

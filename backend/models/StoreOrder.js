@@ -3,7 +3,7 @@ const { Schema } = require("mongoose");
 const storeorderSchema = new Schema(
   {
     productId: { type: Schema.Types.ObjectId, ref: "Product" },
-    price: { type: String },
+    price: { type: Number },
     shop: { type: Schema.Types.ObjectId, ref: "Store" },
     delivery_status: { type: String, default: "pending" },
     received_status: { type: Boolean, default: false },

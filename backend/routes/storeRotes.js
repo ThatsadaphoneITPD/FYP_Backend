@@ -7,6 +7,8 @@ const { protect } = require("../middlewares/authMiddleware");
 router.route("/").get(storeCTRL.getStores);
 //Get User Merchant Store
 router.route("/merchentshop").get(protect, storeCTRL.getMerchantStore);
+//Get User Merchant sale
+router.route("/shopsale").get(protect, storeCTRL.getSaleStore);
 //Get Shoper 's each  orderItem id is received the goods
 router
   .route("/shoper/recive_order")

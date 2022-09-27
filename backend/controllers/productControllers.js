@@ -216,39 +216,30 @@ const DeleteAttachmetsById = asyncHandler(async (req, res) => {
       function (error, result) {
         if (error) throw new Error(error);
         // resolve(result);
-        res.status(200).json({ message: "Attachment Removed" });
+        return res.status(200).json({ message: "Attachment Removed" });
       }
     );
     await attachment.remove();
   } else {
-    res.status(404);
-    throw new Error("Attachment not Found");
+    return res.status(404).send("Attachment not Found");
   }
 });
 
 const DeleteProduct = asyncHandler(async (req, res) => {
+  const { shop } = req.user;
   const product = await Product.findById(req.params.id);
-  try {
-    if (product.user.toString() !== req.user.accountId.toString()) {
-      res.status(401);
-      throw new Error("You can't perform this action");
-    }
 
-    if (product) {
-      // 1.Remove file from cloudianry and clear attachment from mongo
-      product.attachments.forEach((attachment) => {
-        removeAllAttachmentOnMongoAndFileOnCloud(attachment, res);
-      });
-      // 2. Remove Product from Mongo
-      await product.remove();
-      res.status(200).json({ message: "product Removed" });
-    } else {
-      res.status(404).json({ message: "product not Found" });
-    }
-  } catch (error) {
-    res.status(400).json({
-      error: error.message,
+  if (product) {
+    // 1.Remove file from cloudianry and clear attachment from mongo
+    product.attachments.forEach((attachment) => {
+      removeAllAttachmentOnMongoAndFileOnCloud(attachment);
     });
+    // 2. Remove from Store the Reove product after Product from Mongo
+    RemoveItemFromStore(product, shop);
+    await product.remove();
+    res.status(200).json({ message: "product Removed" });
+  } else {
+    res.status(404).json({ message: "product not Found" });
   }
 });
 
@@ -386,6 +377,25 @@ async function SaveItemToStore(item, sh) {
     console.log("can't save item in Store");
   }
 }
+async function RemoveItemFromStore(item, sh) {
+  //find store base on req.user auth
+  const store = await Store.findById(sh);
+  //if Found same store
+  if (store) {
+    // store will push or add in array;
+    //update new Product in Store;
+    await store.updateOne({
+      $pull: {
+        product: {
+          _id: item._id,
+        },
+      },
+    });
+    console.log(`${item._id}'s remove Item in Store`);
+  } else {
+    console.log("can't save item in Store");
+  }
+}
 
 async function updateAttachmentFromProduct(req, product) {
   try {
@@ -452,9 +462,8 @@ function removeSingleAttachmentOnMongo(attachmentId) {
     )
   );
 }
-async function removeAllAttachmentOnMongoAndFileOnCloud(attachmentId, res) {
+async function removeAllAttachmentOnMongoAndFileOnCloud(attachmentId) {
   const attachment = await Attachment.findById(attachmentId);
-
   if (attachment) {
     // 1. Remove file on Cloud
     cloudinary.uploader.destroy(
@@ -463,14 +472,13 @@ async function removeAllAttachmentOnMongoAndFileOnCloud(attachmentId, res) {
       function (error, result) {
         if (error) throw new Error(error);
         // resolve(result);
-        res.status(200).json({ message: "Attachment Removed" });
       }
     );
     //2. Remove Attachment
     await attachment.remove();
   } else {
-    res.status(404);
-    throw new Error("Attachment not Found");
+    // return res.status(404).then("Attachment not Found");
+    return;
   }
 }
 
