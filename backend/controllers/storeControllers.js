@@ -1,5 +1,5 @@
 const asyncHandler = require("express-async-handler");
-const { Store, Order, StoreOrder } = require("../models");
+const { Store, Product, StoreOrder } = require("../models");
 const { roles } = require("../fixtures");
 const ObjectID = require("mongodb").ObjectId;
 
@@ -294,23 +294,62 @@ const getSaleStore = asyncHandler(async (req, res) => {
               name: "$product.title",
               price: "$order.price",
               value: { $avg: "$order.quantity" },
+              total: {
+                $sum: { $multiply: ["$order.price", "$order.quantity"] },
+              },
+              date: "$order.updatedAt",
             },
           },
-          totalSaleAmount: { $sum: { $multiply: ["$order.price"] } },
+          totalSaleAmount: {
+            $sum: { $multiply: ["$order.price", "$order.quantity"] },
+          },
 
           countAllSale: { $count: {} },
           categoriedSale: {
             $push: {
               _id: "$order._id",
-              category: "$product.category.name",
+              name: "$product.category.name",
               value: { $sum: 1 },
             },
           },
         },
       },
     ];
+    let queryPro = [
+      {
+        $lookup: {
+          from: "products",
+          localField: "_id",
+          foreignField: "_id",
+          as: "product",
+        },
+      },
+      { $unwind: "$product" },
+      {
+        $lookup: {
+          from: "categories",
+          localField: "product.category",
+          foreignField: "_id",
+          as: "product.category",
+        },
+      },
+      { $unwind: "$product.category" },
+      {
+        $group: {
+          _id: "$_id",
+          name: { $first: "$product.title" },
+          category: { $first: "$product.category.name" },
+          value: { $sum: 1 },
+        },
+      },
+    ];
     const store = await Store.aggregate(query);
-    res.status(200).send({ sale: store, message: "Getting Store sale" });
+    const globalMarket = await Product.aggregate(queryPro);
+    res.status(200).send({
+      sale: store,
+      market: globalMarket,
+      message: "Getting Store sale",
+    });
   } catch (err) {
     res.status(500).send({ message: err.message });
   }
