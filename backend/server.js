@@ -48,7 +48,6 @@ app.use("/api/users", userRoutes);
 //API Product Create/Edit/delete
 
 app.use("/api/notes", noteRoutes);
-
 //API Product Create/Edit/delete
 
 app.use("/api/products", protect, multer.array("files"), productRoutes);

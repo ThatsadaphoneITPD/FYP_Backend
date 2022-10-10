@@ -53,28 +53,91 @@ const addrole = asyncHandler(async function (req, res) {
   );
 });
 // 3. Get user Profile
-const getProfileById = asyncHandler(async function (req, res) {
-  const { accountid } = req.query;
-  if (!accountid)
-    return res.status(400).json({ error: "send your request information" });
+const getOneUser = asyncHandler(async (req, res) => {
+  try {
+    const user = await Account.findOne({ _id: req.user.accountId })
+      .select({
+        username: 1,
+        email: 1,
+        role: 1,
+        profileImage: 1,
+      })
+      .populate({ path: "role", select: "roleName" });
+    const profile = await UserProfile.findOne({
+      account: req.user.accountId,
+    }).select({
+      firstName: 1,
+      lastName: 1,
+      age: 1,
+    });
+    const RoleSwitch = [roles.SHOPPER, roles.MERCHANT];
+    res.status(200).send({ user: user, profile: profile, roles: RoleSwitch });
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+});
+const UpdateRole = asyncHandler(async (req, res) => {
+  try {
+    const user = await Account.findOne({ _id: req.user.accountId })
+      .select({
+        username: 1,
+        email: 1,
+        role: 1,
+      })
+      .populate({ path: "role", select: "roleName" });
+    const profile = await UserProfile.findOne({
+      account: req.user.accountId,
+    }).select({
+      firstName: 1,
+      lastName: 1,
+      age: 1,
+    });
+    const username = req.query.username;
+    const Roleid = req.query.roleId;
+    const first = req.query.first;
+    const last = req.query.last;
+    const age = req.query.age;
 
-  const foundAccount = await Account.findById(accountid, "", {
-    select: { profileImage: 1, username: 1, email: 1, role: 1 },
-    populate: { path: "role", select: { _id: 0, roleName: 1 } },
-  }).exec();
-  const foundProfile = await UserProfile.findOne({ account: accountid }).exec();
-
-  const promise = Promise.all([foundAccount, foundProfile]);
-
-  return promise
-    .then((data) => {
-      const [foundAccount, foundProfile] = data;
-      return res.status(200).json({
-        message: "get user profile successfully",
-        response: { ...foundProfile._doc, ...foundAccount._doc },
+    const assignedRole = await Role.findOne({ roleName: Roleid }).exec();
+    if (user.length !== 0) {
+      let meassage1 = "";
+      if (assignedRole) {
+        user.role = assignedRole._id;
+        await user.save();
+        // console.log(updateuser);
+        meassage1 = "user Change Role as " + Roleid;
+      }
+      if (first !== "") {
+        profile.firstName = first;
+        await profile.save();
+        meassage1 = "Change Name";
+      }
+      if (last !== "") {
+        profile.lastName = last;
+        await profile.save();
+        meassage1 = "Change Content";
+      }
+      if (age !== "") {
+        profile.age = age;
+        await profile.save();
+        meassage1 = "Change Age";
+      }
+      if (username !== "") {
+        user.username = username;
+        await user.save();
+        meassage1 = "Change Store Name";
+      }
+      res.status(200).send({
+        user: user,
+        profile: profile,
+        message: meassage1,
       });
-    })
-    .catch((error) => res.status(500).json({ error: "Get profile failed!" }));
+    } else {
+      res.status(404).json({ message: "orderItem not found" });
+    }
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
 });
 
 const updateUserProfile = asyncHandler(async function (req, res) {
@@ -317,12 +380,13 @@ const logout = asyncHandler(async function (req, res) {
 
 module.exports = {
   registerUser,
+  UpdateRole,
+  getOneUser,
   getAccounts,
   getRole,
   login,
   checkToken,
   logout,
   addrole,
-  getProfileById,
   updateUserProfile,
 };

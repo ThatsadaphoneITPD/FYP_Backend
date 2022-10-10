@@ -11,10 +11,11 @@ const {
 router.route("/").get(protect, userCtrl.getAccounts);
 //Get Homepage Auth
 // 2. User Profile
+
 router
-  .route("/profile")
-  .get((req, res) => res.status(200).send("access Profile"))
-  .post(protect, userCtrl.updateUserProfile);
+  .route("/profile/user")
+  .get(protect, userCtrl.getOneUser)
+  .put(protect, userCtrl.UpdateRole);
 
 // 3. New User register as Shopper
 router.route("/register").post(userCtrl.registerUser);
