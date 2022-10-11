@@ -5,4 +5,5 @@ module.exports = {
   categoryCtrl: require("./categoryControllers"),
   orderCTRL: require("./orderControllers"),
   storeCTRL: require("./storeControllers"),
+  messageCTRL: require("./messageControllers"),
 };

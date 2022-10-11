@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const notes = require("./data/notes");
 const dotenv = require("dotenv");
+const socket = require("socket.io");
 const { connectDB } = require("./config");
 dotenv.config();
 const {
@@ -12,9 +13,10 @@ const {
   stripeRotes,
   orderRotes,
   storeRotes,
+  messageRotes,
 } = require("./routes");
 const { notFound, errorHandler } = require("./middlewares/errorMiddleware");
-const { multer, isAuthentication } = require("./utils");
+const { multer } = require("./utils");
 const { protect } = require("./middlewares/authMiddleware");
 
 const app = express();
@@ -58,13 +60,39 @@ app.use("/api/categories", categoryRotes);
 app.use("/api/orders", orderRotes);
 //API Store
 app.use("/api/stores", storeRotes);
-//APT Stripe Payment
+//API Stripe Payment
 app.use("/api/stripe", stripeRotes);
+//API Message
+app.use("/api/messages", messageRotes);
 // ------------------- Error Handler -------------------------
 app.use(notFound);
 app.use(errorHandler);
 
 // ------------------ Server Port -----------------------------
 const PORT = process.env.PORT || 5000;
+// ------------User API server at Port-------------------
+const server = app.listen(PORT, console.log(`server start at port ${PORT}`));
+//------------- connect server with Socket port ------------
+const io = socket(server, {
+  cors: {
+    origin: "http://localhost:3000",
+    credentials: true,
+  },
+});
 
-app.listen(PORT, console.log(`server start at port ${PORT}`));
+global.onlineUsers = new Map();
+io.on("connection", (socket) => {
+  // console.log("a user connected");
+  global.chatSocket = socket;
+  socket.on("add-user", (userId) => {
+    onlineUsers.set(userId, socket.id);
+    // console.log("user disconnected");
+  });
+
+  socket.on("send-msg", (data) => {
+    const sendUserSocket = onlineUsers.get(data.to);
+    if (sendUserSocket) {
+      socket.to(sendUserSocket).emit("msg-recieve", data.msg);
+    }
+  });
+});

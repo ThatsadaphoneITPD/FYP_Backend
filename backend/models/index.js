@@ -10,4 +10,5 @@ module.exports = {
   Order: model("Order", require("./Order")),
   Store: model("Store", require("./Store")),
   StoreOrder: model("StoreOrder", require("./StoreOrder")),
+  Message: model("Message", require("./Message")),
 };

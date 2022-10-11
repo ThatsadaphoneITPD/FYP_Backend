@@ -4,9 +4,7 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "start": "nodemon backend/server.js",
-    "cilent": "npm start --prefix frontend",
-    "dev": "concurrently \"npm start\" \"npm run cilent\""
+    "start": "nodemon backend/server.js"
   },
   "repository": {
     "type": "git",
@@ -21,7 +19,6 @@
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cloudinary": "^1.30.0",
-    "concurrently": "^7.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.0.0",
     "express": "^4.17.3",
@@ -31,6 +28,7 @@
     "multer": "^1.4.5-lts.1",
     "nodemon": "^2.0.15",
     "react-icons": "^4.3.1",
+    "socket.io": "^4.5.2",
     "stripe": "^10.1.0"
   }
 }

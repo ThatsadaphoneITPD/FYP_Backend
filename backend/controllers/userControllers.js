@@ -76,13 +76,14 @@ const getOneUser = asyncHandler(async (req, res) => {
     res.status(500).send({ message: err.message });
   }
 });
-const UpdateRole = asyncHandler(async (req, res) => {
+const UpdateUserInfo = asyncHandler(async (req, res) => {
   try {
     const user = await Account.findOne({ _id: req.user.accountId })
       .select({
         username: 1,
         email: 1,
         role: 1,
+        profileImage: 1,
       })
       .populate({ path: "role", select: "roleName" });
     const profile = await UserProfile.findOne({
@@ -97,6 +98,7 @@ const UpdateRole = asyncHandler(async (req, res) => {
     const first = req.query.first;
     const last = req.query.last;
     const age = req.query.age;
+    const url = req.query.url;
 
     const assignedRole = await Role.findOne({ roleName: Roleid }).exec();
     if (user.length !== 0) {
@@ -127,6 +129,11 @@ const UpdateRole = asyncHandler(async (req, res) => {
         await user.save();
         meassage1 = "Change Store Name";
       }
+      if (url !== "") {
+        user.profileImage = url;
+        await user.save();
+        meassage1 = "Change Avatar";
+      }
       res.status(200).send({
         user: user,
         profile: profile,
@@ -140,37 +147,6 @@ const UpdateRole = asyncHandler(async (req, res) => {
   }
 });
 
-const updateUserProfile = asyncHandler(async function (req, res) {
-  const user = await Account.findById(req.user.accountId);
-  const profile = await UserProfile.findOne({ account: req.user.accountId });
-
-  try {
-    if (user) {
-      user.name = req.body.username || user.username;
-      user.email = req.body.email || user.email;
-      user.profileImage = req.body.profileImage || user.profileImage;
-
-      const updatedUser = await user.save();
-      let token = new Token({
-        id: updatedUser._id,
-      });
-      let accessToken = token.createToken();
-      return res.status(200).json({
-        _id: updatedUser._id,
-        username: updatedUser.username,
-        email: updatedUser.email,
-        profileImage: updatedUser.profileImage,
-        isAdmin: updatedUser.isAdmin,
-        token: accessToken,
-        profile,
-      });
-    }
-  } catch (err) {
-    return res.status(err.status || 500).json({
-      error: err.message,
-    });
-  }
-});
 //4. Register new Account as Shopper
 
 const registerUser = asyncHandler(async function (req, res) {
@@ -320,6 +296,7 @@ const login = asyncHandler(async function (req, res) {
       accountId: user.id,
       account: user.username,
       isLoggedIn: true,
+      avatar: user.profileImage,
       success: true,
     };
 
@@ -380,7 +357,7 @@ const logout = asyncHandler(async function (req, res) {
 
 module.exports = {
   registerUser,
-  UpdateRole,
+  UpdateUserInfo,
   getOneUser,
   getAccounts,
   getRole,
@@ -388,5 +365,4 @@ module.exports = {
   checkToken,
   logout,
   addrole,
-  updateUserProfile,
 };

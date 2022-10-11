@@ -15,7 +15,7 @@ router.route("/").get(protect, userCtrl.getAccounts);
 router
   .route("/profile/user")
   .get(protect, userCtrl.getOneUser)
-  .put(protect, userCtrl.UpdateRole);
+  .put(protect, userCtrl.UpdateUserInfo);
 
 // 3. New User register as Shopper
 router.route("/register").post(userCtrl.registerUser);
