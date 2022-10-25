@@ -35,11 +35,4 @@ const attachmentSchema = new mongoose.Schema({
   },
 });
 
-// attachmentSchema.pre(["deleteOne", "deleteMany"], function (next) {
-//   this.model("Post").findOneAndRemove(
-//     { attachments: { $in: this._id } },
-//     next()
-//   );
-// });
-
 module.exports = attachmentSchema;

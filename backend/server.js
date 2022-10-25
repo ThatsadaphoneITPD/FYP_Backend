@@ -8,7 +8,6 @@ dotenv.config();
 const {
   userRoutes,
   productRoutes,
-  noteRoutes,
   categoryRotes,
   stripeRotes,
   orderRotes,
@@ -38,18 +37,10 @@ app.get("/", (req, res) => {
 //   res.json(notes);
 // });
 
-// app.get("/api/datanotes/:id", (req, res) => {
-//   const note = notes.find((n) => n._id === req.params.id);
-//   res.send(note);
-// });
-
 //API account user Register and Login
 
 app.use("/api/users", userRoutes);
 
-//API Product Create/Edit/delete
-
-app.use("/api/notes", noteRoutes);
 //API Product Create/Edit/delete
 
 app.use("/api/products", protect, multer.array("files"), productRoutes);

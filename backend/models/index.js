@@ -6,7 +6,6 @@ module.exports = {
   Product: model("Product", require("./Product")),
   Attachment: model("Attachment", require("./Attachment")),
   Category: model("Category", require("./Category")),
-  Note: model("Note", require("./noteModel")),
   Order: model("Order", require("./Order")),
   Store: model("Store", require("./Store")),
   StoreOrder: model("StoreOrder", require("./StoreOrder")),
