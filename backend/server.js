@@ -42,7 +42,7 @@ app.get("/", (req, res) => {
 app.use("/api/users", userRoutes);
 
 //API Product Create/Edit/delete
-//refresh
+//refresh agian
 
 app.use("/api/products", protect, multer.array("files"), productRoutes);
 app.use("/api/productSearch", productRoutes);
