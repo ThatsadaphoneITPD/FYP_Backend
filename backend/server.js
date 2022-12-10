@@ -67,7 +67,7 @@ const server = app.listen(PORT, console.log(`server start at port ${PORT}`));
 //------------- connect server with Socket port ------------
 const io = socket(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: "https://ec-market.netlify.app",
     credentials: true,
   },
 });
